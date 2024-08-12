@@ -160,6 +160,7 @@ import LoginScreen from './components/LoginScreen';
 import HomeScreen from './components/HomeScreen';
 
 const Stack = createStackNavigator();
+//const Users = require('./components/UsersSchema');
 
 const App = () => {
   return (

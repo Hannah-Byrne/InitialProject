@@ -3,174 +3,402 @@ import {
   View,
   Text,
   Image,
-  ImageBackground,
   ScrollView,
   Button,
-  Pressable,
   Modal,
   StatusBar,
-  ActivityIndicator,
   Alert,
   StyleSheet,
+  TextInput,
+  ActionSheetIOS
 } from 'react-native';
-
+import { Calendar } from 'react-native-calendars';
 import React, { useState } from 'react';
-import Button1 from './Button1';
 import Button2 from './Button2';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { forNoAnimation } from '@react-navigation/stack/lib/typescript/src/TransitionConfigs/CardStyleInterpolators';
-
-// fitness tab
-function FitnessScreen() {
-  const SubLogo = require('./Sublogo.png');
-  return (
-    <View style={styles.screen}>
-      <Image source={SubLogo} style={{}}/>
-      <Text>Fitness History</Text>
-    </View>
-  );
-}
-
-
-//nutrition tab
-function NutritionScreen() {
-  const SubLogo = require('./Sublogo.png');
-  return (
-    <View style={styles.screen}>
-      <Image source={SubLogo} style={{}}/>
-      <Text>Nutrition History</Text>
-    </View>
-  );
-}
+import DatePicker from './DatePicker.js';
+import GiphySearch from './GiphySearch'
+import axios, * as others from 'axios';
+import FitnessScreen from './NutritionScreen.js';
+import NutritionScreen from './FitnessScreen.js';
 
 //home / main screen
 function HomeScreen() {
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isWorkoutModalVisible, setIsWorkoutModalVisible] = useState(false);
+  const [isMealModalVisible, setIsMealModalVisible] = useState(false);
+  const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
   const Logo = require('./Logo.png');
   const SubLogo = require('./Sublogo.png');
+  const [FoodType, setFoodType] = useState('');
+  const [Calories, setCalories] = useState('');
+  const [Username, setUsername] = useState('');
+  const Today = new Date().toLocaleDateString();
+  const [WorkoutType, setWorkoutType] = useState('');
+  const [WorkoutTime, setWorkoutTime] = useState('');
+
+  const handlePostWorkout =  async () => {
+    var axios = require('axios').default;
+    var data = JSON.stringify({
+    "collection": "Workouts",
+    "database": "User",
+    "dataSource": "Test",
+    "document": {
+       "WorkoutType": WorkoutType,
+       "WorkoutTime": WorkoutTime,
+       "Date": Today,
+       "username": Username
+    },
+ 
+});
+var config = {
+    method: 'post',
+    url: 'https://us-east-2.aws.data.mongodb-api.com/app/data-fyrfzoj/endpoint/data/v1/action/insertOne',
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Request-Headers': '*',
+      'api-key': 'ryxUn0mSel0Q5n2l4qXxHBgZioUULrEW4SeaoJiPpWPz6inaGTC44m1v8LPSW1vR',
+    },
+    data: data
+};
+axios(config)
+    .then(function (response) {
+        console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+    Alert.alert('Workout posted!', `WorkoutType: ${WorkoutType}\nWorkoutTime ${WorkoutTime}`);
+    setIsWorkoutModalVisible(false);};
+
+
+  const handlePostMeal =  async () => {
+    var axios = require('axios').default;
+    var data = JSON.stringify({
+    "collection": "Foods",
+    "database": "User",
+    "dataSource": "Test",
+    "document": {
+       "FoodType": FoodType,
+       "Calories": Calories,
+       "Date": Today,
+       "username": Username
+    },
+ 
+});
+var config = {
+    method: 'post',
+    url: 'https://us-east-2.aws.data.mongodb-api.com/app/data-fyrfzoj/endpoint/data/v1/action/insertOne',
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Request-Headers': '*',
+      'api-key': 'ryxUn0mSel0Q5n2l4qXxHBgZioUULrEW4SeaoJiPpWPz6inaGTC44m1v8LPSW1vR',
+    },
+    data: data
+};
+axios(config)
+    .then(function (response) {
+        console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+    Alert.alert('Meal posted!', `FoodType: ${FoodType}\nCalories: ${Calories}`);
+    setIsMealModalVisible(false);};
+
+const showActionSheet = () => {
+     ActionSheetIOS.showActionSheetWithOptions(
+              {
+                  options: ['Strength', 'Cardio', 'Aerobics', 'Cancel'],
+                  cancelButtonIndex: 3,
+              },
+              (buttonIndex) => {
+                  let selectedType;
+                  switch (buttonIndex) {
+                      case 0:
+                          selectedType = 'Strength';
+                          break;
+                      case 1:
+                          selectedType = 'Cardio';
+                          break;
+                      case 2:
+                          selectedType = 'Aerobics';
+                          break;
+                      default:
+                          selectedType = '';
+                  }
+                  if (selectedType) {
+                      setWorkoutType(selectedType);
+                      console.log(`Selected Workout Type: ${selectedType}`);
+                  }
+              }
+            )}
+const DatePicker = () => {
+              const [selectedDate, setSelectedDate] = useState(null);
+          
+              const onDayPress = (day) => {
+                  setSelectedDate(day.dateString);
+              };
+          
+              return (
+                  <View style={styles.container}>
+                      <Text style={styles.header}>Select a Date</Text>
+                      <Calendar
+                          onDayPress={onDayPress}
+                          markedDates={selectedDate ? { [selectedDate]: { selected: true } } : {}}
+                      />
+                      {selectedDate && (
+                          <Text style={styles.selectedDate}>Selected Date: {selectedDate}</Text>
+                      )}
+                  </View>
+              );
+          };
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" />
       <ScrollView>
-      <Image source={Logo} style={{width:370}}/>
-  
+      <Image source={Logo} style={{ width: 370 }} />
         <View style = {styles.TextBox}>
           <Text style={styles.TextData}>Welcome Back!</Text>
-          <Text>Continue your health journey by selecting an option</Text>
+          <Text style={styles.whiteText}>Continue your health journey by selecting an option below </Text>
         </View>
         <View style={styles.box}>
         <Button2
             title="Log a Workout"
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => setIsWorkoutModalVisible(true)}
           />
         </View>
 
         <View style={[styles.box]}>
           <Button2
             title="Log a Meal"
-            onPress={() => setIsModalVisible(true)}
-            /*onPress={() =>
-              Alert.alert('You did it', 'You pressed the button', [
-                {
-                  text: 'Cancel',
-                  onPress: () => console.log('Cancelled button pressed'),
-                },
-                {
-                  text: 'Okay',
-                  onPress: () => console.log('Okay button pressed'),
-                },
-              ])
-            }
-        <Pressable onPress={() => setIsModalVisible(true)}>
-          <Image
-            source={{ uri: 'https://picsum.photos/200' }}
-            style={{ width: 220, height: 200 }}
-          />
-        </Pressable>
-            */
+            onPress={() => setIsMealModalVisible(true)}
           />
           
         </View>
         <View style={styles.box}>
           <Button2
-            title="Create a Goal"
-            onPress={() => setIsModalVisible(true)}
+            title="Motivate me!"
+            onPress={() => setIsGoalModalVisible(true)}
           />
         </View>
 
-
       </ScrollView>
 
-      <Modal
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
+    {/* Workout Modal */}
+    <Modal
+        visible={isWorkoutModalVisible}
+        onRequestClose={() => setIsWorkoutModalVisible(false)}
         animationType="slide"
         presentationStyle="formSheet"
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'teal',
-            padding: 10,
-            alignItems: 'center',
-          }}>
-          <Image source={SubLogo} />
+        < ScrollView contentContainerStyle={styles.modalContent} >
+        <Image source={Logo} style={{ width: 370 }} />
+          <View style={styles.smallbox}></View>
+          <Text style={styles.TextData}> Enter Username: </Text>
+          <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={Username}
+        onChangeText={setUsername}
+      />
+      <Text style={styles.TextData}> Enter the amount of time: </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="X minutes"
+        value={WorkoutTime}
+        onChangeText={setWorkoutTime}
+      />
+      <View style={styles.smallbox}></View>
+          <View style={styles.button2}>
+        <Button title="Select Workout Type" onPress={showActionSheet} /> 
+            <View style={styles.box}></View>
         </View>
+            <View style={styles.smallbox}></View>
+            <View style={styles.buttonContainer}>
+            <View style={styles.closeButton}>
+            <Button
+              title="Post"
+              onPress={handlePostWorkout}
+            />
+          </View>
+          <View style={styles.closeButton}>
+            <Button
+              title="Close"
+              onPress={() => setIsWorkoutModalVisible(false)}
+            />
+          </View>
+          </View>
+        </ScrollView>
+      </Modal>
 
-        <Button
-          title="Close"
-          onPress={() => setIsModalVisible(false)}
-        ></Button>
+      {/* Meal Modal */}
+      <Modal
+        visible={isMealModalVisible}
+        onRequestClose={() => setIsMealModalVisible(false)}
+        animationType="slide"
+        presentationStyle="formSheet"
+      >
+
+         <ScrollView contentContainerStyle={styles.modalContent} >
+         <Image source={Logo} style={{ width: 370 }} />
+         <View style={styles.smallbox}></View>
+         <Text style={styles.TextData}> Enter Username: </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={Username}
+        onChangeText={setUsername}
+      />
+
+          <Text style={styles.TextData}> Enter Meal: </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="FoodType"
+        value={FoodType}
+        onChangeText={setFoodType}
+      />
+    
+       <Text style={styles.TextData}> Enter Calories: </Text>
+     <TextInput
+        style={styles.input}
+        value={Calories}
+        placeholder="Calories"
+        onChangeText={setCalories}
+        keyboardType="number-pad" 
+      />
+      <View style={styles.box}></View>
+      <View style={styles.buttonContainer}>
+            <View style={styles.closeButton}>
+            <Button
+              title="Post"
+              onPress={handlePostMeal}
+            />
+          </View>
+          <View style={styles.closeButton}>
+            <Button
+              title="Close"
+              onPress={() => setIsMealModalVisible(false)}
+            />
+          </View>
+          </View>
+          
+        </ScrollView>
+  
+      </Modal>
+
+      {/* Goal Modal */}
+      <Modal
+        visible={isGoalModalVisible}
+        onRequestClose={() => setIsGoalModalVisible(false)}
+        animationType="slide"
+        presentationStyle="formSheet"
+      >
+        <View style={styles.modalContent}>
+          <Image source={SubLogo} />
+          <View style={styles.smallbox}></View>
+          <Text style={styles.TextData}> You're doing great! </Text>
+          <View style={styles.smallbox}></View>
+          <GiphySearch/>
+          <View style={styles.closeButton}>
+            <Button
+              title="Close"
+              onPress={() => setIsGoalModalVisible(false)}
+            />
+          </View>
+        </View>
       </Modal>
     </View>
   );
 }
 
-// Create Bottom Tab Navigator
-const Tab = createBottomTabNavigator();
 
-function MyTabs() {
-  return (
-    <Tab.Navigator>
-      <Tab.Screen name="Home " component={HomeScreen} />
-      <Tab.Screen name="Fitness" component={FitnessScreen} />
-      <Tab.Screen name="Nutrition" component={NutritionScreen} />
-    </Tab.Navigator>
-  );
-}
+
+const Tab = createBottomTabNavigator();
 
 //main app function
 export default function App() {
   return (
-    <NavigationContainer independent={true}>
-      <MyTabs />
-    </NavigationContainer>
+    <NavigationContainer independent = {true} >
+      <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Fitness" component={NutritionScreen} />
+      <Tab.Screen name="Nutrition" component={FitnessScreen} />
+    </Tab.Navigator>
+   </NavigationContainer>
   );
 }
 
-//font and box styles
+//styles
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'teal',
   },
   box: {
-    height: 70,
-    width: 339,
-    margin:5
+    width: '100%',
+    height: 40,
+   padding:20,
+   marginBottom: 10,
+   padding: 10,
+    
+  },
+  smallbox:{
+    width: '100%',
+    height: 5,
+   padding: 5,
   },
   TextBox: {
     alignItems: 'center',
     padding: 20,
     height:100,
-  
   },
   TextData: {
-    fontSize: 25,
-    color: "black",
+    fontSize: 20,
+    color: "white",
     fontFamily: 'KohinoorBangla'
-  }
-
+  },
+  whiteText: {
+    color: 'white',
+    textAlign: 'center',
+  },
+  modalContent:{
+      flexGrow: 1,
+      backgroundColor: 'teal',
+      padding: 16,
+      alignItems: 'center',
+    },
+    closeButton: {
+      backgroundColor: 'white',
+      padding: 5,
+      height:50,
+      width: "40%", 
+      borderWidth: .25
+    },
+    input: {
+      width: '80%',
+      height: 40,
+      borderColor: '#ccc',
+      borderWidth: 0,
+      borderRadius: 5,
+      marginBottom: 10,
+      padding: 10,
+      backgroundColor: '#fff',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20,
+    },
+    button2:{
+    backgroundColor: 'white',
+    padding: 5,
+    height:50,
+    borderRadius: 0,
+    width: "80%", 
+    borderWidth: 0
+    },
 });
